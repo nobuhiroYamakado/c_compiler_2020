@@ -18,7 +18,7 @@ typedef enum {
 	ND_MUL, //*
 	ND_DIV, ///
 	ND_NUM, //integer
-} NodeKind
+} NodeKind;
 
 // Token type
 typedef struct Token Token;
@@ -38,7 +38,7 @@ struct Node {
 	Node *lhs;			//left-hand side
 	Node *rhs;			//right-hand side
 	int val;			//when kind is ND_NUM
-}
+};
 
 //input program
 char *user_input;
@@ -149,6 +149,23 @@ Token *tokenize()
 
 	new_token(TK_EOF, cur, p);
 	return (head.next);
+}
+
+Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
+{
+	Node *node = calloc(1, sizeof(Node));
+	node->kind = kind;
+	node->lhs = lhs;
+	node->rhs = rhs;
+	return node;
+}
+
+Node *new_node_num(int val)
+{
+	Node *node = calloc(1, sizeof(Node));
+	node->kind = ND_NUM;
+	node->val = val;
+	return node;
 }
 
 int main(int argc, char **argv)
