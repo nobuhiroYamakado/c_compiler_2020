@@ -12,14 +12,33 @@ typedef enum {
 	TK_EOF, //end-of-file markers
 } TokenKind;
 
+typedef enum {
+	ND_ADD, //+
+	ND_SUB, //-
+	ND_MUL, //*
+	ND_DIV, ///
+	ND_NUM, //integer
+} NodeKind
+
 // Token type
 typedef struct Token Token;
+
 struct Token {
 	TokenKind kind;		//token kind
 	Token *next;		//next token
 	int val;			//if kind is TK_NUM, its value
 	char *str;			//token string
 };
+
+// Node type
+typedef struct Node Node;
+
+struct Node {
+	NodeKind kind;		//node kind
+	Node *lhs;			//left-hand side
+	Node *rhs;			//right-hand side
+	int val;			//when kind is ND_NUM
+}
 
 //input program
 char *user_input;
