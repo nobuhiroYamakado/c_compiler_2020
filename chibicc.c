@@ -168,6 +168,85 @@ Node *new_node_num(int val)
 	return node;
 }
 
+//再帰的に使い合うので宣言しておく
+Node *primary();
+Node *mul();
+Node *expr();
+
+Node *primary()
+{
+	//次のトークンが'('なら、"(" expr ")"のはず
+	if (consume('('))
+	{
+		Node *node = expr();
+		expect(')');
+		return node;
+	}
+	
+	//そうでないときは数字が渡されるはず
+	return new_node_num(expect_number());
+}
+Node *mul()
+{
+	Node *node = primary();
+	for (;;)
+	{
+		if (consume('*'))
+			node = new_node(ND_MUL, node, primary());
+		else if (consume('/'))
+			node = new_node(ND_DIV, node, primary());
+		else
+			return node;
+	}
+}
+
+Node *expr()
+{
+	Node *node = mul();
+
+	for (;;)
+	{
+		if (consume('+'))
+			node = new_node(ND_ADD, node, mul());
+		else if (consume('-'))
+			node = new_node(ND_SUB, node, mul());
+		else
+			return node;
+	}
+}
+
+void gen(Node *node)
+{
+	if(node->kind == ND_NUM)
+	{
+		printf("  push %d\n", node->val);
+		return;
+	}
+
+	gen(node->lhs);
+	gen(node->rhs);
+
+	printf("  pop rdi\n");
+	printf("  pop rax\n");
+
+	switch (node->kind)
+	{
+		case ND_ADD:
+			printf("  add rax, rdi\n");
+			break;
+		case ND_SUB:
+			printf("  sub rax, rdi\n");
+			break;
+		case ND_MUL:
+			printf("  imul rax, rdi\n");
+			break;
+		case ND_DIV:
+			printf("  cqo\n");
+			printf("  idiv rdi\n");
+			break;
+	}
+	printf("  push rax\n");
+}
 int main(int argc, char **argv)
 {
 	if (argc != 2)
