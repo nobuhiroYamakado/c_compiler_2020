@@ -91,7 +91,7 @@ void expect(char op)
 int expect_number()
 {
 	if(token->kind != TK_NUM)
-		error_at(token->str, "expected a number");
+		error_at(token->str, "expected a number//expect_number");
 	int val = token->val;
 	token = token->next;
 	return (val);
@@ -113,7 +113,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str)
 }
 
 //Tokenize "user_input" and returns new tokens.
-Token *tokenize()
+Token *tokenize(char *user_input)
 {
 	char *p = user_input;
 	Token head;
@@ -130,7 +130,7 @@ Token *tokenize()
 		}
 
 		//punctuator
-		if (*p == '+' || *p == '-')
+		if (*p == '+' || *p == '-' || *p == '*' || *p == '/')
 		{
 			cur = new_token(TK_RESERVED, cur, p++);
 			continue;
@@ -144,7 +144,7 @@ Token *tokenize()
 			continue;
 		}
 
-		error_at(p,"expected a number");
+		error_at(p,"invalid token//tokenize");
 	}
 
 	new_token(TK_EOF, cur, p);
@@ -256,27 +256,20 @@ int main(int argc, char **argv)
 	}
 
 	user_input = argv[1];
-	token = tokenize();
-
+	token = tokenize(user_input);
+	Node *node = expr();
+	
+	//アセンブリの前半部分
 	printf(".intel_syntax noprefix\n");
 	printf(".global main\n");
 	printf("main:\n");
+	
+	//抽象構文木を下りながらコード生成
+	gen(node);
 
-	//the first token must be a number
-	printf("  mov rax, %d\n", expect_number());
-
-	//... followed by either "+<number>" or "-<number>"
-	while (!at_eof())
-	{
-		if (consume('+'))
-		{
-			printf("  add rax, %d\n", expect_number());
-			continue;
-		}
-		expect('-');
-		printf("  sub rax, %d\n", expect_number());
-	}
-
+	//スタックトップに敷き全体の値が残っているはずなので、
+	//それをRAXにおｒ−どして関数からの返り値とする。
+	printf("  pop rax\n");
 	printf("  ret\n");
 	return (0);
 }
