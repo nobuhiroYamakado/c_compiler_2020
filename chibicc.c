@@ -187,39 +187,21 @@ Node *new_node_num(int val)
 }
 
 //再帰的に使い合うので宣言しておく
-Node *primary();
-Node *mul();
-Node *expr();
-Node *unary();
 
-Node *primary()
-{
-	//次のトークンが'('なら、"(" expr ")"のはず
-	if (consume("("))
-	{
-		Node *node = expr();
-		expect(")");
-		return node;
-	}
-	
-	//そうでないときは数字が渡されるはず
-	return new_node_num(expect_number());
-}
-Node *mul()
-{
-	Node *node = unary();
-	for (;;)
-	{
-		if (consume("*"))
-			node = new_node(ND_MUL, node, unary());
-		else if (consume("/"))
-			node = new_node(ND_DIV, node, unary());
-		else
-			return node;
-	}
-}
+Node *expr();
+Node *equality();
+Node *relational();
+Node *add();
+Node *mul();
+Node *unary();
+Node *primary();
 
 Node *expr()
+{
+	return (equality());
+}
+
+Node *equality()
 {
 	Node *node = mul();
 
@@ -234,6 +216,20 @@ Node *expr()
 	}
 }
 
+Node *mul()
+{
+	Node *node = unary();
+	for (;;)
+	{
+		if (consume("*"))
+			node = new_node(ND_MUL, node, unary());
+		else if (consume("/"))
+			node = new_node(ND_DIV, node, unary());
+		else
+			return node;
+	}
+}
+
 Node *unary()
 {
 	if (consume("+"))
@@ -241,6 +237,20 @@ Node *unary()
 	if (consume("-"))
 		return (new_node(ND_SUB, new_node_num(0), primary()));
 	return (primary());
+}
+
+Node *primary()
+{
+	//次のトークンが'('なら、"(" expr ")"のはず
+	if (consume("("))
+	{
+		Node *node = expr();
+		expect(")");
+		return node;
+	}
+	
+	//そうでないときは数字が渡されるはず
+	return new_node_num(expect_number());
 }
 
 void gen(Node *node)
