@@ -203,6 +203,39 @@ Node *expr()
 
 Node *equality()
 {
+	Node *node = relational();
+
+	for (;;)
+	{
+		if (consume("=="))
+			node = new_node(ND_EQ, node, relational());
+		else if (consume("!="))
+			node = new_node(ND_NE, node, relational());
+		else
+			return (node);
+	}
+}
+
+Node *relational()
+{
+	Node *node = add();
+	for (;;)
+	{
+		if (consume("<"))
+			node = new_node(ND_LT, node, add());
+		else if (consume("<="))
+			node = new_node(ND_LE, node, add());
+		else if (consume(">"))
+			node = new_node(ND_RT, node, add());
+		else if (consume(">="))
+			node = new_node(ND_RE, node, add());
+		else
+			return (node);
+	}
+}
+
+Node *add()
+{
 	Node *node = mul();
 
 	for (;;)
@@ -212,7 +245,7 @@ Node *equality()
 		else if (consume("-"))
 			node = new_node(ND_SUB, node, mul());
 		else
-			return node;
+			return (node);
 	}
 }
 
@@ -226,7 +259,7 @@ Node *mul()
 		else if (consume("/"))
 			node = new_node(ND_DIV, node, unary());
 		else
-			return node;
+			return (node);
 	}
 }
 
