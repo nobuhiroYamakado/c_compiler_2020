@@ -126,7 +126,10 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len)
 	cur->next = tok;
 	return (tok);
 }
-
+bool startswith(char *p, char *q)
+{
+	return (memcmp(p,q,strlen(q)) == 0);
+}
 //Tokenize "user_input" and returns new tokens.
 Token *tokenize(char *user_input)
 {
@@ -143,10 +146,17 @@ Token *tokenize(char *user_input)
 			p++;
 			continue;
 		}
-
-		//punctuator
+		//2digits punctuator
+		if (startswith(p,"==") || startswith(p, "!=") ||
+				startswith(p, "<=") || startswith(p, ">="))
+		{
+			cur = new_token(TK_RESERVED, cur, p, 2);
+			p += 2;
+			continue;
+		}
+		//1digit punctuator
 		if (*p == '+' || *p == '-' || *p == '*' || *p == '/'
-				|| *p == '(' || *p == ')')
+				|| *p == '(' || *p == ')' || *p == '<' || *p == '>')
 		{
 			cur = new_token(TK_RESERVED, cur, p++,1);
 			continue;
@@ -226,9 +236,9 @@ Node *relational()
 		else if (consume("<="))
 			node = new_node(ND_LE, node, add());
 		else if (consume(">"))
-			node = new_node(ND_RT, node, add());
+			node = new_node(ND_LT, add(), node);
 		else if (consume(">="))
-			node = new_node(ND_RE, node, add());
+			node = new_node(ND_LE, add(), node);
 		else
 			return (node);
 	}
@@ -314,6 +324,26 @@ void gen(Node *node)
 		case ND_DIV:
 			printf("  cqo\n");
 			printf("  idiv rdi\n");
+			break;
+		case ND_EQ:
+			printf("  cmp rax, rdi\n");
+			printf("  sete al\n");
+			printf("  movzb rax, al\n");
+			break;
+		case ND_NE:
+			printf("  cmp rax, rdi\n");
+			printf("  setne al\n");
+			printf("  movzb rax, al\n");
+			break;
+		case ND_LT:
+			printf("  cmp rax, rdi\n");
+			printf("  setl al\n");
+			printf("  movzb rax, al\n");
+			break;
+		case ND_LE:
+			printf("  cmp rax, rdi\n");
+			printf("  setle al\n");
+			printf("  movzb rax, al\n");
 			break;
 	}
 	printf("  push rax\n");
