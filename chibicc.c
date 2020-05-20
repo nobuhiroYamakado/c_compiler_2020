@@ -173,6 +173,7 @@ Node *new_node_num(int val)
 Node *primary();
 Node *mul();
 Node *expr();
+Node *unary();
 
 Node *primary()
 {
@@ -214,6 +215,15 @@ Node *expr()
 		else
 			return node;
 	}
+}
+
+Node *unary()
+{
+	if (consume('+'))
+		return (primary());
+	if (consume('-'))
+		return (new_node(ND_SUB, new_node_num(0), primary()));
+	return (primary());
 }
 
 void gen(Node *node)
