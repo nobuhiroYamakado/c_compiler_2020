@@ -17,6 +17,15 @@ typedef enum {
 	ND_SUB, //-
 	ND_MUL, //*
 	ND_DIV, ///
+	
+	ND_EQ,	//==
+	ND_NE,	//!=
+	ND_LT,	//<
+	ND_LE,	//<=
+	
+	ND_RT,	//>
+	ND_RE,	//>=
+
 	ND_NUM, //integer
 } NodeKind;
 
