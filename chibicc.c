@@ -190,13 +190,13 @@ Node *primary()
 }
 Node *mul()
 {
-	Node *node = primary();
+	Node *node = unary();
 	for (;;)
 	{
 		if (consume('*'))
-			node = new_node(ND_MUL, node, primary());
+			node = new_node(ND_MUL, node, unary());
 		else if (consume('/'))
-			node = new_node(ND_DIV, node, primary());
+			node = new_node(ND_DIV, node, unary());
 		else
 			return node;
 	}
