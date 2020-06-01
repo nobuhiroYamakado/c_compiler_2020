@@ -72,25 +72,6 @@ struct Node {
 
 Node *parse(Token *tok);
 
-//bool consume(char *op);
-//void expect(char *op);
-//int expect_number(void);
-//bool at_eof(void);
-//Token *new_token(TokenKind kind, Token *cur, char *str, int len);
-//bool startswith(char *p, char *q);
-//Token *tokenize(char *user_input);
-//Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
-//Node *new_node_num(int val);
-
-
-//Node *expr();
-//Node *equality();
-//Node *relational();
-//Node *add();
-//Node *mul();
-//Node *unary();
-//Node *primary();
-
 
 //
 //codegen.c
@@ -98,11 +79,3 @@ Node *parse(Token *tok);
 
 //void gen(Node *node);
 void codegen(Node *node);
-
-//grobal//input program
-//char *user_input;
-
-//current token
-//Token *token;
-
-
