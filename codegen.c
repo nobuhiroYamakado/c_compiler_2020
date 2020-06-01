@@ -1,6 +1,6 @@
 #include "chibicc.h"
 
-void gen(Node *node)
+static void gen(Node *node)
 {
 	if(node->kind == ND_NUM)
 	{
@@ -51,6 +51,29 @@ void gen(Node *node)
 			break;
 	}
 	printf("  push rax\n");
+}
+
+void codegen(Node *node)
+{
+	//アセンブリの前半部分
+	printf(".intel_syntax noprefix\n");
+	printf(".global main\n");
+	printf("main:\n");
+	
+	// Save callee-saved registers.
+	//printf("  push r12\n");
+	//printf("  push r13\n");
+	//printf("  push r14\n");
+	//printf("  push r15\n");
+	//抽象構文木を下りながらコード生成
+	gen(node);
+
+	//スタックトップに敷き全体の値が残っているはずなので、
+	//それをRAXにロードして関数からの返り値とする。
+	printf("  pop rax\n");
+	printf("  ret\n");
+
+
 }
 
 

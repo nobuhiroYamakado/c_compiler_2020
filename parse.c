@@ -1,147 +1,197 @@
 #include "chibicc.h"
 
+static Node *expr(Token **rest, Token *tok);
+static Node *equality(Token **rest, Token *tok);
+static Node *relational(Token **rest, Token *tok);
+static Node *add(Token **rest, Token *tok);
+static Node *mul(Token **rest, Token *tok);
+static Node *unary(Token **rest, Token *tok);
+static Node *primary(Token **rest, Token *tok);
 
-//consumes the current token if it matchs "op".
-bool consume(char *op)
-{
-	if (token->kind != TK_RESERVED ||
-			strlen(op) != token->len ||
-			memcmp(token->str, op, token->len))
-		return (false);
-	token = token->next;
-	return (true);
-}
-
-//ensure that the current token is "op".
-void expect(char *op)
-{
-	if(token->kind != TK_RESERVED ||
-			strlen(op) != token->len ||
-			memcmp(token->str, op, token->len))
-		error_at(token->str,"expected '%s'",op);
-	token = token->next;
-}
-
-//ensure that the current token is TK_MUM
-int expect_number()
-{
-	if(token->kind != TK_NUM)
-		error_at(token->str, "expected a number//expect_number");
-	int val = token->val;
-	token = token->next;
-	return (val);
-}
-
-bool at_eof()
-{
-	return token->kind == TK_EOF;
-}
-
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs)
+static Node *new_node(NodeKind kind)
 {
 	Node *node = calloc(1, sizeof(Node));
 	node->kind = kind;
+	return (node);
+}
+
+static Node *new_binary(NodeKind kind, Node *lhs, Node *rhs)
+{
+	Node *node = new_node(kind);
 	node->lhs = lhs;
 	node->rhs = rhs;
-	return node;
+	return (node);
 }
 
-Node *new_node_num(int val)
+static Node *new_num(long val)
 {
-	Node *node = calloc(1, sizeof(Node));
-	node->kind = ND_NUM;
+	Node *node = new_node(ND_NUM);
 	node->val = val;
-	return node;
+	return (node);
 }
 
-Node *expr()
+static long get_number(Token *tok)
 {
-	return (equality());
+	if(tok->kind != TK_NUM)
+		error_tok(tok, "expected a number");
+	return(tok->val);
 }
 
-Node *equality()
+
+//expr = equality
+static Node *expr(Token **rest, Token *tok)
 {
-	Node *node = relational();
+	return (equality(rest, tok));
+}
+
+static Node *equality(Token **rest, Token *tok)
+{
+	Node *node = relational(&tok, tok);
 
 	for (;;)
 	{
-		if (consume("=="))
-			node = new_node(ND_EQ, node, relational());
-		else if (consume("!="))
-			node = new_node(ND_NE, node, relational());
+		if (equal(tok, "=="))
+		{
+			Node *rhs = relational(&tok, tok->next);
+			node = new_binary(ND_EQ, node, rhs);
+		}
+		else if (equal(tok,"!="))
+		{
+			Node *rhs = relational(&tok, tok->next);
+			node = new_binary(ND_NE, node, rhs);
+		}
 		else
+		{
+			*rest = tok;
 			return (node);
+		}
 	}
 }
 
-Node *relational()
+// relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+static Node *relational(Token **rest, Token *tok)
 {
-	Node *node = add();
+	Node *node = add(&tok, tok);
 	for (;;)
 	{
-		if (consume("<"))
-			node = new_node(ND_LT, node, add());
-		else if (consume("<="))
-			node = new_node(ND_LE, node, add());
-		else if (consume(">"))
-			node = new_node(ND_LT, add(), node);
-		else if (consume(">="))
-			node = new_node(ND_LE, add(), node);
+		if (equal(tok, "<"))
+		{
+			Node *rhs = add(&tok, tok->next);
+			node = new_binary(ND_LT, node, rhs);
+		}
+		else if (equal(tok, "<="))
+		{
+			Node *rhs = add(&tok, tok->next);
+			node = new_binary(ND_LE, node, rhs);
+		}
+		else if (equal(tok, ">"))
+		{
+			Node *rhs = add(&tok, tok->next);
+			node = new_binary(ND_LT, rhs, node);
+		}
+		else if (equal(tok, ">="))
+		{
+			Node *rhs = add(&tok, tok->next);
+			node = new_binary(ND_LE, rhs, node);
+		}
 		else
+		{
+			*rest = tok;
 			return (node);
+		}
 	}
 }
 
-Node *add()
+// add = mul ("+" mul | "-" mul)*
+static Node *add(Token **rest, Token *tok)
 {
-	Node *node = mul();
+	Node *node = mul(&tok, tok);
 
 	for (;;)
 	{
-		if (consume("+"))
-			node = new_node(ND_ADD, node, mul());
-		else if (consume("-"))
-			node = new_node(ND_SUB, node, mul());
+		if (equal(tok, "+"))
+		{
+			Node *rhs = mul(&tok, tok->next);
+			node = new_binary(ND_ADD, node, rhs);
+		}
+		else if (equal(tok, "-"))
+		{
+			Node *rhs = mul(&tok, tok->next);
+			node = new_binary(ND_SUB, node, rhs);
+		}
 		else
+		{
+			*rest = tok;
 			return (node);
+		}
 	}
 }
 
-Node *mul()
+// mul = unary("*" unary | "/" unary)*
+Node *mul(Token **rest, Token *tok)
 {
-	Node *node = unary();
+	Node *node = unary(&tok, tok);
 	for (;;)
 	{
-		if (consume("*"))
-			node = new_node(ND_MUL, node, unary());
-		else if (consume("/"))
-			node = new_node(ND_DIV, node, unary());
+		if (equal(tok, "*"))
+		{
+			Node *rhs = unary(&tok, tok->next);
+			node = new_binary(ND_MUL, node, rhs);
+		}
+		else if (equal(tok, "/"))
+		{
+			Node *rhs = unary(&tok, tok->next);
+			node = new_binary(ND_DIV, node, rhs);
+		}
 		else
+		{
+			*rest = tok;
 			return (node);
+		}
 	}
 }
 
-Node *unary()
+// unary = ("+" | "-") unary
+static Node *unary(Token **rest, Token *tok)
 {
-	if (consume("+"))
-		return (primary());
-	if (consume("-"))
-		return (new_node(ND_SUB, new_node_num(0), primary()));
-	return (primary());
+	if (equal(tok, "+"))
+	{
+		return (unary(rest, tok->next));
+	}
+	
+	if (equal(tok, "-"))
+	{
+		return (new_binary(ND_SUB, new_num(0), unary(rest, tok->next)));
+	}
+
+	return (primary(rest, tok));
 }
 
-Node *primary()
+//primary = "(" expr ")" | num
+static Node *primary(Token **rest, Token *tok)
 {
+
 	//次のトークンが'('なら、"(" expr ")"のはず
-	if (consume("("))
+	//if (consume("("))
+	if (equal(tok, "("))
 	{
-		Node *node = expr();
-		expect(")");
-		return node;
+		Node *node = expr(&tok, tok->next);
+		//expect(")");
+		*rest = skip(tok, ")");
+		return (node);
 	}
 	
 	//そうでないときは数字が渡されるはず
-	return new_node_num(expect_number());
+	Node *node = new_num(get_number(tok));
+	*rest = tok->next;
+	return (node);
+	//return new_node_num(expect_number());
 }
 
-
+Node *parse(Token *tok)
+{
+	Node *node = expr(&tok, tok);
+	if(tok->kind != TK_EOF)
+		error_tok(tok, "extra toiken");
+	return (node);
+}

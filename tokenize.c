@@ -1,5 +1,8 @@
 #include "chibicc.h"
 
+// Input string
+static char *current_input;
+
 //Reports an error and exit.
 void error(char *fmt, ...)
 {
@@ -11,20 +14,45 @@ void error(char *fmt, ...)
 }
 
 //reports an error location and exit.
-void error_at(char *loc, char *fmt, ...)
+static void verror_at(char *loc, char *fmt, va_list ap)
 {
-	va_list ap;
-	va_start(ap, fmt);
 
-	int pos = loc - user_input;
-	fprintf(stderr, "%s\n", user_input);
+	int pos = loc - current_input;
+	fprintf(stderr, "%s\n", current_input);
 	fprintf(stderr, "%*s", pos, "");//print pos spaces.
 	fprintf(stderr, "^ ");
 	vfprintf(stderr,fmt,ap);
 	fprintf(stderr, "\n");
 	exit(1);
+
 }
 
+static void error_at(char *loc, char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	verror_at(loc, fmt, ap);
+}
+
+void error_tok(Token *tok, char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	verror_at(tok->loc, fmt, ap);
+}
+
+bool equal(Token *tok, char *op)
+{
+	return (strlen(op) == tok->len &&
+			!strncmp(tok->loc, op, tok->len));
+}
+
+Token *skip(Token *tok, char *op)
+{
+	if(!equal(tok, op))
+		error_tok(tok, "expected '%s'",op);
+	return (tok->next);
+}
 
 //create a new token and add it as the next token of "cur".
 Token *new_token(TokenKind kind, Token *cur, char *str, int len)
@@ -32,10 +60,12 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len)
 	Token *tok = calloc(1, sizeof(Token));
 	tok->kind = kind;
 	tok->str = str;
+	tok->loc = str;
 	tok->len = len;
 	cur->next = tok;
 	return (tok);
 }
+
 bool startswith(char *p, char *q)
 {
 	return (memcmp(p,q,strlen(q)) == 0);

@@ -7,21 +7,12 @@ int main(int argc, char **argv)
 		return (1);
 	}
 
-	user_input = argv[1];
-	token = tokenize(user_input);
-	Node *node = expr();
+	//user_input = argv[1];
+	//token = tokenize(user_input);
+	Token *tok = tokenize(argv[1]);
+	//Node *node = expr();
+	Node *node = parse(tok);
 	
-	//アセンブリの前半部分
-	printf(".intel_syntax noprefix\n");
-	printf(".global main\n");
-	printf("main:\n");
-	
-	//抽象構文木を下りながらコード生成
-	gen(node);
-
-	//スタックトップに敷き全体の値が残っているはずなので、
-	//それをRAXにおｒ−どして関数からの返り値とする。
-	printf("  pop rax\n");
-	printf("  ret\n");
+	codegen(node);
 	return (0);
 }
