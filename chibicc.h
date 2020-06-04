@@ -1,4 +1,4 @@
-
+#include <assert.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -57,6 +57,8 @@ typedef enum {
 	ND_RE,	//>=
 
 	ND_NUM, //integer
+
+	ND_ESPR_STMT, //Expression statment
 } NodeKind;
 
 
@@ -65,6 +67,7 @@ typedef struct Node Node;
 
 struct Node {
 	NodeKind kind;		//node kind
+	Node *next;			//next node
 	Node *lhs;			//left-hand side
 	Node *rhs;			//right-hand side
 	int val;			//when kind is ND_NUM
