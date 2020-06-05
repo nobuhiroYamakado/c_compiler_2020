@@ -72,11 +72,11 @@ bool startswith(char *p, char *q)
 }
 
 //Tokenize "user_input" and returns new tokens.
-Token *tokenize(char *user_input)
+Token *tokenize(char *p)
 {
-	char *p = user_input;
-	Token head;
-	head.next = NULL;
+	current_input = p;
+	
+	Token head = {};
 	Token *cur = &head;
 
 	while (*p)
@@ -87,6 +87,7 @@ Token *tokenize(char *user_input)
 			p++;
 			continue;
 		}
+
 		//2digits punctuator
 		if (startswith(p,"==") || startswith(p, "!=") ||
 				startswith(p, "<=") || startswith(p, ">="))
@@ -95,9 +96,9 @@ Token *tokenize(char *user_input)
 			p += 2;
 			continue;
 		}
+		
 		//1digit punctuator
-		if (*p == '+' || *p == '-' || *p == '*' || *p == '/'
-				|| *p == '(' || *p == ')' || *p == '<' || *p == '>')
+		if (ispunct(*p))
 		{
 			cur = new_token(TK_RESERVED, cur, p++,1);
 			continue;
