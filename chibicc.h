@@ -59,6 +59,7 @@ typedef enum {
 	ND_NUM, //integer
 
 	ND_EXPR_STMT, //Expression statment
+	ND_RETURN, //"return"
 } NodeKind;
 
 
