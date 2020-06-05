@@ -31,6 +31,6 @@ assert 0 "1 == 2;"
 assert 1 "3 > 2;"
 assert 0 "4 <= 2;"
 assert 2 "(42 < 43)+(1 >= 1);"
-#assert 3 "3;"
+assert 3 "1; 2; 3;"
 #assert 6 "a = 3; b = 2; a*b;"
 echo OK
