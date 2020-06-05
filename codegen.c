@@ -9,7 +9,8 @@ static char *reg(int idx)
 		error("register out of range: $d", idx);
 	return (r[idx]);
 }
-static void gen(Node *node)
+
+static void gen_expr(Node *node)
 {
 	if(node->kind == ND_NUM)
 	{
@@ -17,8 +18,8 @@ static void gen(Node *node)
 		return;
 	}
 
-	gen(node->lhs);
-	gen(node->rhs);
+	gen_expr(node->lhs);
+	gen_expr(node->rhs);
 
 	char *rd = reg(top -2);
 	char *rs = reg(top -1);
@@ -66,6 +67,19 @@ static void gen(Node *node)
 	}
 }
 
+static void gen_stmt(Node *node)
+{
+	switch (node->kind)
+	{
+		case ND_EXPR_STMT:
+			gen_expr(node->lhs);
+			printf("  mov rax, %s\n", reg(--top));
+			return;
+		default:
+			error("invalid statement");
+	}
+}
+
 void codegen(Node *node)
 {
 	//アセンブリの前半部分
@@ -79,11 +93,12 @@ void codegen(Node *node)
 	printf("  push r14\n");
 	printf("  push r15\n");
 	
-	//抽象構文木を下りながらコード生成
-	gen(node);
+	for (Node *n = node; n; n = n->next)
+	{
+		gen_stmt(n);
+		assert(top == 0);
+	}
 
-	// raxにスタックトップをプッシュして返値になっているはず。
-	printf("  mov rax, %s\n",reg(top - 1));
 	// back callee-saved registers.
 	printf("  pop r15\n");
 	printf("  pop r14\n");
