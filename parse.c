@@ -40,14 +40,20 @@ static Node *new_num(long val)
 static long get_number(Token *tok)
 {
 	if(tok->kind != TK_NUM)
-		error_tok(tok, "expected a number");
+		error_tok(tok, "expected a number//parse/get_number");
 	return (tok->val);
 }
 
-// stmt = expr ";"
+// stmt = "return" expr ";" | expr ";"
 static Node *stmt(Token **rest, Token *tok)
 {
-	Node *node = new_unary(ND_EXPR_STMT, expr(&tok, tok));
+	Node *node;
+	
+	if (equal(tok, "return"))
+		node = new_unary(ND_RETURN, expr(&tok, tok->next));
+	else
+		node = new_unary(ND_EXPR_STMT, expr(&tok, tok));
+
 	*rest = skip(tok, ";");
 	return (node);
 }
@@ -58,6 +64,7 @@ static Node *expr(Token **rest, Token *tok)
 	return (equality(rest, tok));
 }
 
+// equality = relational ( "==" relational | "!=" relational)*
 static Node *equality(Token **rest, Token *tok)
 {
 	Node *node = relational(&tok, tok);
