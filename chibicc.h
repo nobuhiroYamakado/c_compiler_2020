@@ -61,7 +61,7 @@ typedef enum {
 
 	ND_ASSING, //=
 
-	ND_VAR //variable
+	ND_VAR, //variable
 	ND_EXPR_STMT, //Expression statment
 	ND_RETURN, //"return"
 } NodeKind;
