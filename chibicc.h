@@ -13,6 +13,7 @@
 typedef enum {
 	TK_RESERVED, //keywords or punctuators
 	TK_NUM, //integer literals
+	TK_IDENT, //identifiers
 	TK_EOF, //end-of-file markers
 } TokenKind;
 
@@ -58,6 +59,9 @@ typedef enum {
 
 	ND_NUM, //integer
 
+	ND_ASSING, //=
+
+	ND_VAR //variable
 	ND_EXPR_STMT, //Expression statment
 	ND_RETURN, //"return"
 } NodeKind;
@@ -72,6 +76,7 @@ struct Node {
 	Node *lhs;			//left-hand side
 	Node *rhs;			//right-hand side
 	int val;			//when kind is ND_NUM
+	char name;			//when kind is ND_VAR
 };
 
 Node *parse(Token *tok);
