@@ -59,7 +59,7 @@ typedef enum {
 
 	ND_NUM, //integer
 
-	ND_ASSING, //=
+	ND_ASSIGN, //=
 
 	ND_VAR, //variable
 	ND_EXPR_STMT, //Expression statment
